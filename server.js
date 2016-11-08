@@ -49,12 +49,42 @@ app.get(/^\/new\/(.+)/, function(req, res) {
                         console.error(err)
                     }                
 
-                    urls.insert({url: reqURL, short: count});
+                    urls.insert({url: reqURL, short: count.toString()});
                     res.send(JSON.stringify({original_url: reqURL, shortened_url: count}));
                     db.close();
                 });
             }
 
+        });
+    });
+});
+
+//get a redirect
+app.get('/:short', function(req, res) {
+    var shortURL = req.params.short;
+
+    //connect to db
+    mongo.connect(mongoURL, function(err, db) {
+        if(err) {
+            console.error(err); 
+        }    
+
+        var urls = db.collection('urls');
+
+        //check if the shortURL exists
+        urls.find({short: shortURL}).toArray(function(err, docs) {
+            if(err) {
+                console.error(err); 
+            }        
+
+            doc = docs[0];
+            if(doc == null) {
+                res.send(JSON.stringify({error: "This url is not in the database"}));
+                db.close();
+            } else {
+                res.redirect(doc.url);
+                db.close();
+            }
         });
     });
 });
