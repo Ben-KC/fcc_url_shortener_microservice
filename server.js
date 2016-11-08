@@ -1,7 +1,8 @@
 var express = require('express'),
     mongo = require('mongodb').MongoClient;
-var app = express();
 
+var app = express();
+var mongoURL = "mongodb://0.0.0.0:27017/shortener";
 
 app.set('port', (process.env.PORT || 8080));
 
@@ -18,13 +19,44 @@ app.get('/new', function(req, res) {
 app.get(/^\/new\/(.+)/, function(req, res) {
     //test the url
     var test = /^https?:\/\/(www\.)?\w+\.\w+$/;
-    var url = req.params[0];
+    var reqURL = req.params[0];
 
-    if(!test.test(url)) {
+    if(!test.test(reqURL)) {
         return res.send(JSON.stringify({error: "invalid address"})); 
     }
 
-    res.send('it worked!');
+    //connect to db
+    mongo.connect(mongoURL, function(err, db) {
+        if(err) {
+            console.error(err);
+        }
+        
+        var urls = db.collection('urls');
+        
+        //check whether the url already exists
+        urls.find({url: reqURL}).toArray(function(err, docs) {
+            if(err) {
+                console.error(err);
+            } 
+
+            doc = docs[0];
+            if(doc != null) {
+                res.send(JSON.stringify({original_url: doc.url, shortened_url: doc.short})); 
+                db.close();
+            } else {
+                urls.count({}, function(err, count) {
+                    if(err) {
+                        console.error(err)
+                    }                
+
+                    urls.insert({url: reqURL, short: count});
+                    res.send(JSON.stringify({original_url: reqURL, shortened_url: count}));
+                    db.close();
+                });
+            }
+
+        });
+    });
 });
 
 app.listen(app.get('port'));
