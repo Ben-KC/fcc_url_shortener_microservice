@@ -2,7 +2,7 @@ var express = require('express'),
     mongo = require('mongodb').MongoClient;
 
 var app = express();
-var mongoURL = "mongodb://0.0.0.0:27017/shortener";
+var mongoURL = process.env.SHORTENER_URI;
 
 app.set('port', (process.env.PORT || 8080));
 
