@@ -39,9 +39,9 @@ app.get(/^\/new\/(.+)/, function(req, res) {
                 console.error(err);
             } 
 
-            doc = docs[0];
+            var doc = docs[0];
             if(doc != null) {
-                res.send(JSON.stringify({original_url: doc.url, shortened_url: doc.short})); 
+                res.send(JSON.stringify({original_url: doc.url, shortened_url: "https://mighty-gorge-33550.herokuapp.com/" + doc.short})); 
                 db.close();
             } else {
                 urls.count({}, function(err, count) {
@@ -50,7 +50,7 @@ app.get(/^\/new\/(.+)/, function(req, res) {
                     }                
 
                     urls.insert({url: reqURL, short: count.toString()});
-                    res.send(JSON.stringify({original_url: reqURL, shortened_url: count}));
+                    res.send(JSON.stringify({original_url: reqURL, shortened_url: "https://mighty-gorge-33550.herokuapp.com/" + count}));
                     db.close();
                 });
             }
